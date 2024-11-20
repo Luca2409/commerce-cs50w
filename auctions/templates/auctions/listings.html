@@ -1,0 +1,36 @@
+{% extends "auctions/layout.html" %} {% block body %}
+
+<div>
+
+    <div>
+        <h1> {{ listing.title }} </h1>
+    </div>
+
+    <div>
+        <img src="{{ listing.image }}" alt="">
+    </div>
+
+    <div>
+        <h1> $: {{ listing.starting_bid }}</h1>
+    </div>
+
+    <div>
+
+        {% if message %}
+        <p> {{ message }} </p>
+        {% endif %}
+        <form action="{% url 'listings' listing.id %}" method="post">
+            {% csrf_token %} {{ form }}
+            <input type="submit">
+        </form>
+    </div>
+
+    <div>
+        <p>
+            Description: {{ listing.description }}
+        </p>
+    </div>
+
+</div>
+
+{% endblock %}

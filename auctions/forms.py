@@ -6,3 +6,6 @@ class CreateListing(forms.Form):
     category = forms.CharField(label="category", max_length=64)
     picture = forms.URLField(label="picture")
     bid_height = forms.IntegerField(label="bid_height")
+
+class SubmitBid(forms.Form):
+    bid = forms.IntegerField(label="bid")
