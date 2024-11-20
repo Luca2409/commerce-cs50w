@@ -12,7 +12,7 @@ class Listings(models.Model):
     title = models.CharField(max_length=64)
     description = models.CharField(max_length=300)
     category = models.CharField(max_length=64)
-    image = models.ImageField()
+    image = models.URLField()
     starting_bid= models.IntegerField()
     
     def __str__(self):

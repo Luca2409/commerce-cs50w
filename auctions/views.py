@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 def index(request):
-    return render(request, "auctions/index.html")
+    return render(request, "auctions/index.html", {
+        "listings": Listings.objects.all()
+    })
 
 
 def login_view(request):
@@ -74,15 +76,17 @@ def create(request):
         if form.is_valid():
             data = form.cleaned_data
             logger.warning(data)
-            listing = Listings(title=data['title'], description=data['description'], category=data['category'], starting_bid=data['bid_height'])
+            listing = Listings(title=data['title'], description=data['description'], image=data['picture'], category=data['category'], starting_bid=data['bid_height'])
             listing.save()
             
             return render(request, "auctions/create.html", {
-            "form": CreateListing()
+            "form": CreateListing(), 
+            "message": "Success."
         })
         else:
             return render(request, "auctions/create.html", {
-            "form": CreateListing()
+            "form": CreateListing(),
+            "message": "Form is not valid."
         })
     else:
         return render(request, "auctions/create.html", {
