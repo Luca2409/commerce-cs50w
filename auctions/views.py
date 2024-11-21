@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User, Listings, Bids
+from .models import User, Listings, Bid
 from .forms import CreateListing, SubmitBid
 
 import logging
@@ -98,9 +98,9 @@ def listings(request, id):
         if request.method == "POST":
             form = SubmitBid(request.POST)
             if form.is_valid():
-                data = form.cleaned_data
-                #update data, models need to get adapted to foreign keys 
-                bid = Bids(bid_height=data['bid'])
+                data = form.cleaned_data 
+                bid = Listings.objects.get(id=id)
+                
                 bid.save()
                 return render(request, "auctions/listings.html", {
                     "form": SubmitBid(),
