@@ -9,3 +9,7 @@ class CreateListing(forms.Form):
 
 class SubmitBid(forms.Form):
     bid = forms.IntegerField(label="bid")
+
+class CommentForm(forms.Form):
+    title = forms.CharField(label="title", max_length=64)
+    text = forms.CharField(label="text", max_length=300)

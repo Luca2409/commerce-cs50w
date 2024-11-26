@@ -1,8 +1,7 @@
 {% extends "auctions/layout.html" %} {% block body %}
-<h2>Active Listings</h2>
 
-
-{% for listing in listings %}
+<h1> Watchlist </h1>
+{% for listing in watchlist %}
 
 <div style="border-style: solid; margin-bottom: 10px;">
     <div style="display: inline-block;">
@@ -16,12 +15,6 @@
         <h2> Description: {{ listing.description }} </h2>
         <h2> $: {{ listing.starting_bid }} </h2>
     </div>
-
-
-    <form action="{% url 'delete' listing.id %}" method="post">
-        {% csrf_token %}
-        <button type="submit">Close</button>
-    </form>
 
 </div>
 

@@ -11,9 +11,14 @@
     </div>
 
     <div>
-        <h1> $: {{ listing.starting_bid }}</h1>
+
+        <h1>
+            $: {{ listing.starting_bid }}
+        </h1>
+
     </div>
 
+    {% if user.is_authenticated %}
     <div>
 
         {% if message %}
@@ -24,13 +29,54 @@
             <input type="submit">
         </form>
     </div>
-
+    {% endif %}
     <div>
         <p>
             Description: {{ listing.description }}
         </p>
     </div>
 
+
+    <div>
+
+
+        <form action="{% url 'addwatchlist' listing.id %}" method="post">
+            {% csrf_token %}
+
+            <button type="submit">Watchlist</button>
+        </form>
+
+        <form action="{% url 'deletewatchlist' listing.id %}" method="post">
+            {% csrf_token %}
+
+            <button type="submit">Delete Watchlist</button>
+        </form>
+
+
+
+    </div>
+    <h1> Add Comment: </h1>
+
+    <form action="{% url 'comment' listing.id %}" method="post">
+        {% csrf_token %} {{ comment }}
+
+        <input type="submit">
+
+    </form>
+
+    {% for item in comments %}
+    <div>
+        <div style="border-style: solid; margin-bottom: 10px;">
+            <div style="display: inline-block;">
+                <h1>
+                    Title: {{ item.title }}
+                </h1>
+                <h2> Comment: {{ item.comment }} </h2>
+            </div>
+
+        </div>
+    </div>
+    {% endfor %}
 </div>
 
 {% endblock %}

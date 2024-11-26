@@ -3,35 +3,32 @@ from django.db import models
 
 
 class User(AbstractUser):
-
-    def __str__(self):
-        return f"{self.id}: {self.first_name} \n {self.last_name}"
+    pass
     
-class Bid(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user" )
-    bid = models.IntegerField()
-
-class Listings(models.Model):
+class Listing(models.Model):
     title = models.CharField(max_length=64)
     description = models.CharField(max_length=300)
     category = models.CharField(max_length=64)
     image = models.URLField()
     starting_bid = models.IntegerField()
-    current_bid = models.ManyToManyField(Bid, related_name="current_bid") 
-    
-    def __str__(self):
-        return f"{self.id}: {self.title} \n {self.description} \n {self.image} \n {self.starting_bid} \n {self.category} "
+    added_by = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True )
+    closed = models.BooleanField(blank=True, null=True)
 
-class Comments(models.Model):
+class Bid(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, blank=True, null=True)
+    bid = models.IntegerField()
+
+class Comment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     title = models.CharField(max_length=64)
     comment = models.CharField(max_length=300)
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, blank=True, null=True)
 
-    def __str__(self):
-        return f"{self.id}: {self.title} \n {self.comment}"
-    
 class Watchlist(models.Model):
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_id")
-    listing_id = models.ManyToManyField(Listings, related_name="listing_id")
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    listing = models.ManyToManyField(Listing, related_name="watchlist_listing")
 
-    def __str__(self):
-        return f"{self.id}: {self.user_id} \n {self.listing_id}"
+class WinningHistory(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    wins = models.ManyToManyField(Listing)

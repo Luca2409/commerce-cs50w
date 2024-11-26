@@ -3,9 +3,11 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.shortcuts import redirect
+from django.db.models import Max
 
-from .models import User, Listings, Bid
-from .forms import CreateListing, SubmitBid
+from .models import *
+from .forms import CreateListing, SubmitBid, CommentForm
 
 import logging
 
@@ -14,9 +16,28 @@ logger = logging.getLogger(__name__)
 
 def index(request):
     return render(request, "auctions/index.html", {
-        "listings": Listings.objects.all()
+        "listings": Listing.objects.all()
     })
 
+def Delete(request, id):
+    listing = Listing.objects.get(id=id)
+    logger.warning(listing)
+    if request.user == listing.added_by:
+        listing.closed = True
+        listing.save()
+        
+        bids = Bid.objects.filter(listing=listing)
+
+        max_bid = bids.aggregate(Max("bid"))["bid__max"]
+
+        winner = Bid.objects.filter(listing=listing, bid=max_bid).first()
+
+        if winner:  
+            win, created = WinningHistory.objects.get_or_create(user=winner.user)
+
+            win.wins.add(listing)
+
+        return redirect("index")
 
 def login_view(request):
     if request.method == "POST":
@@ -70,13 +91,15 @@ def register(request):
         return render(request, "auctions/register.html")
 
 def create(request):
+    user = User.objects.get(id=request.user.id)
     if request.method == "POST":
         form = CreateListing(request.POST)
         logger.warning(form)
         if form.is_valid():
             data = form.cleaned_data
             logger.warning(data)
-            listing = Listings(title=data['title'], description=data['description'], image=data['picture'], category=data['category'], starting_bid=data['bid_height'])
+            listing = Listing(title=data['title'], description=data['description'], image=data['picture'], category=data['category'], starting_bid=data['bid_height'])
+            listing.added_by = user
             listing.save()
             
             return render(request, "auctions/create.html", {
@@ -95,21 +118,120 @@ def create(request):
     
 
 def listings(request, id):
-        if request.method == "POST":
-            form = SubmitBid(request.POST)
-            if form.is_valid():
-                data = form.cleaned_data 
-                bid = Listings.objects.get(id=id)
+    
+    if request.method == "POST":
+        logger.warning(id)
+        form = SubmitBid(request.POST)
+        if form.is_valid():
+
+            data = form.cleaned_data 
+            user = User.objects.get(id=request.user.id)
+            listing = Listing.objects.get(id=id)
+            
+            bids = Bid.objects.filter(listing=id).values()
+            bid_height = [0]
+
+            for bid in bids: 
+                bid_height.append(bid["bid"])
+
+            if data["bid"] <= listing.starting_bid or data["bid"] <= max(bid_height):
+                return render(request, "auctions/listings.html", {
+                "form": SubmitBid(),
+                "listing": Listing.objects.get(id=id),
+                "comment": CommentForm(),
+                "comments": Comment.objects.filter(listing=id).values(),
+                "message": "Bid is too low."
+            })
+            else: 
                 
+                bid = Bid(bid=data["bid"])
+                bid.user = user
+                bid.listing = listing
                 bid.save()
+                
+                listing.starting_bid = data["bid"]
+                listing.save()
+
                 return render(request, "auctions/listings.html", {
                     "form": SubmitBid(),
+                    "listing": Listing.objects.get(id=id),
+                    "comment": CommentForm(),
+                    "comments": Comment.objects.filter(listing=id).values(),
                     "message": "Successfully submitted bid."
                 })
-            return HttpResponse("Form not valdi.")
-        else:
-            logger.warning(id)
-            return render(request, "auctions/listings.html" , {
-                "form": SubmitBid(),
-                "listing": Listings.objects.get(id=id)
-            })
+            
+        return HttpResponse("Form not valid.")
+    
+    else:
+        return render(request, "auctions/listings.html" , {
+            "form": SubmitBid(),
+            "watchlist": listings,
+            "comment": CommentForm(),
+            "comments": Comment.objects.filter(listing=id).values(),
+            "listing": Listing.objects.get(id=id)
+        })
+            
+def WatchlistView(request):
+    watchlist = Watchlist.objects.get(user=request.user.id)
+    listings = watchlist.listing.all()
+
+    return render(request, "auctions/watchlist.html" , {
+        "watchlist": listings,
+    })
+
+def AddWatchlist(request, id):
+    if request.method == "POST":
+        watchlist = Watchlist.objects.get(user=request.user.id)
+
+        listing = Listing.objects.get(id=id)
+
+        watchlist.listing.add(listing)
+
+        return redirect("listings", id=id)
+    
+
+def DeleteWatchlist(request, id):
+    if request.method == "POST":
+        watchlist = Watchlist.objects.get(user=request.user.id)
+
+        listing = Listing.objects.get(id=id)
+        watchlist.listing.remove(listing)
+
+        return redirect("listings", id=id)
+    
+
+def Categories(request):
+
+    listings = Listing.objects.all().values()
+    category = []
+
+    for listing in listings:
+        category.append(listing["category"])
+
+    return render(request, "auctions/categories.html" , {
+        "categories": category
+    })
+    
+def CategoryPage(request, category):
+    listings = Listing.objects.filter(category=category).values()
+
+    return render(request, "auctions/categorypage.html" , {
+        "listings": listings
+    })
+
+def CommentView(request, id):
+    user = User.objects.get(id=request.user.id)
+    listing = Listing.objects.get(id=id)
+    if request.method == "POST":
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            comment = Comment(title=data["title"], comment=data["text"])
+            comment.listing = listing
+            comment.user = user
+            comment.save()
+        return redirect("listings", id=id)
+    return redirect("listings", id=id)
+    
+        
+    
