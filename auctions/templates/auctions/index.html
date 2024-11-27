@@ -17,11 +17,12 @@
         <h2> $: {{ listing.starting_bid }} </h2>
     </div>
 
-
+    {% if user.is_authenticated %}
     <form action="{% url 'delete' listing.id %}" method="post">
         {% csrf_token %}
         <button type="submit">Close</button>
     </form>
+    {% endif %}
 
 </div>
 

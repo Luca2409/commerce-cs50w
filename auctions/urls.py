@@ -15,5 +15,6 @@ urlpatterns = [
     path("categories", views.Categories, name="categories"), 
     path("categorypage/<str:category>", views.CategoryPage, name="categorypage"),
     path("comment/<int:id>", views.CommentView, name="comment"),
-    path("delete/<int:id>", views.Delete, name="delete")
+    path("delete/<int:id>", views.Delete, name="delete"),
+    path("winhistory", views.WinHistory, name="winhistory")
 ]

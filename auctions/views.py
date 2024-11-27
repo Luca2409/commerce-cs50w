@@ -135,15 +135,17 @@ def listings(request, id):
                 bid_height.append(bid["bid"])
 
             if data["bid"] <= listing.starting_bid or data["bid"] <= max(bid_height):
+                listing = Listing.objects.get(id=id)
                 return render(request, "auctions/listings.html", {
                 "form": SubmitBid(),
-                "listing": Listing.objects.get(id=id),
+                "listing": listing,
                 "comment": CommentForm(),
-                "comments": Comment.objects.filter(listing=id).values(),
+                "comments": Comment.objects.get(listing=id).values(),
+                "user": WinningHistory.objects.get(wins=listing).user,
                 "message": "Bid is too low."
             })
             else: 
-                
+                listing = Listing.objects.get(id=id)
                 bid = Bid(bid=data["bid"])
                 bid.user = user
                 bid.listing = listing
@@ -154,21 +156,26 @@ def listings(request, id):
 
                 return render(request, "auctions/listings.html", {
                     "form": SubmitBid(),
-                    "listing": Listing.objects.get(id=id),
+                    "listing": listing,
                     "comment": CommentForm(),
                     "comments": Comment.objects.filter(listing=id).values(),
+                    "user": WinningHistory.objects.get(wins=listing).user,
                     "message": "Successfully submitted bid."
                 })
             
         return HttpResponse("Form not valid.")
     
     else:
+
+        listing = Listing.objects.get(id=id)
+
         return render(request, "auctions/listings.html" , {
             "form": SubmitBid(),
             "watchlist": listings,
             "comment": CommentForm(),
             "comments": Comment.objects.filter(listing=id).values(),
-            "listing": Listing.objects.get(id=id)
+            "user": WinningHistory.objects.get(wins=listing).user,
+            "listing": listing
         })
             
 def WatchlistView(request):
@@ -206,10 +213,13 @@ def Categories(request):
     category = []
 
     for listing in listings:
+        
         category.append(listing["category"])
 
+    category_final = set(category)
+    
     return render(request, "auctions/categories.html" , {
-        "categories": category
+        "categories": category_final
     })
     
 def CategoryPage(request, category):
@@ -233,5 +243,17 @@ def CommentView(request, id):
         return redirect("listings", id=id)
     return redirect("listings", id=id)
     
+def WinHistory(request):
+
+    user = User.objects.get(id=request.user.id)
+
+    listing = WinningHistory.objects.get(user=user)
+
+    history = listing.wins.all()
+    
+    return render(request, "auctions/winninghistory.html" , {
+        "listings": history
+    })
+    pass
         
     

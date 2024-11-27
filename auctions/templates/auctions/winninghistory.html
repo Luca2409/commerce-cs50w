@@ -1,0 +1,23 @@
+{% extends "auctions/layout.html" %} {% block body %}
+<h2>Win History</h2>
+
+
+{% for listing in listings %}
+
+<div style="border-style: solid; margin-bottom: 10px;">
+    <div style="display: inline-block;">
+        <img src="{{ listing.image }}" alt="" width="50" height="60">
+    </div>
+
+    <div style="display: inline-block;">
+        <h1>
+            <a href="{% url 'listings' listing.id %}"> Title: {{ listing.title }} </a>
+        </h1>
+        <h2> Description: {{ listing.description }} </h2>
+        <h2> $: {{ listing.starting_bid }} </h2>
+    </div>
+
+
+</div>
+
+{% endfor %} {% endblock %}
